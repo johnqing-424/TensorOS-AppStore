@@ -301,14 +301,6 @@ services:
       TOP_K_MAX_VALUE: '10'
       INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH: '4000'
       PM2_INSTANCES: '2'
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-    volumes:
-      - dify_web_pm2:/app/.pm2
     networks:
       - dify
 
@@ -467,13 +459,9 @@ services:
       NGINX_ENABLE_CERTBOT_CHALLENGE: 'false'
       CERTBOT_DOMAIN: your_domain.com
     depends_on:
-      web:
-        condition: service_healthy
-      api:
-        condition: service_started
-      init:
-    condition: service_started
-
+      - api
+      - web
+      - init
     ports:
       - '6080:80'
       # - '${EXPOSE_NGINX_SSL_PORT:-443}:${NGINX_SSL_PORT:-443}'
@@ -514,11 +502,6 @@ networks:
     internal: true
   dify:
     name: dify
-    
-volumes:
-  dify_web_pm2:
-    name: dify
-
 
 x-casaos:
   architectures:
