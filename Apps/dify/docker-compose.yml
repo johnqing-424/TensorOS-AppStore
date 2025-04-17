@@ -224,7 +224,7 @@ services:
   # init service, used for initializing the config files.
   init:
     container_name: dify-init
-    image: cp0204/dify-init:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-init:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify:/configs
@@ -234,7 +234,7 @@ services:
   # API service
   api:
     container_name: dify-api
-    image: langgenius/dify-api:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-api:latest
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -262,7 +262,7 @@ services:
   # The Celery worker for processing the queue.
   worker:
     container_name: dify-worker
-    image: langgenius/dify-api:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-api:latest
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -287,7 +287,7 @@ services:
   # Frontend web application.
   web:
     container_name: dify-web
-    image: langgenius/dify-web:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-web:latest
     restart: unless-stopped
     environment:
       CONSOLE_API_URL: ''
@@ -301,13 +301,21 @@ services:
       TOP_K_MAX_VALUE: '10'
       INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH: '4000'
       PM2_INSTANCES: '2'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+    volumes:
+      - dify_web_pm2:/app/.pm2
     networks:
       - dify
 
   # The postgres database.
   db:
     container_name: dify-db
-    image: postgres:15-alpine
+    image: 192.168.19.104:8081/tensoros_appstore/postgres:15-alpine
     restart: unless-stopped
     environment:
       PGUSER: postgres
@@ -333,7 +341,7 @@ services:
   # The redis cache.
   redis:
     container_name: dify-redis
-    image: redis:6-alpine
+    image: 192.168.19.104:8081/tensoros_appstore/redis:6-alpine
     restart: unless-stopped
     environment:
       REDISCLI_AUTH: difyai123456
@@ -350,12 +358,12 @@ services:
   # The DifySandbox
   sandbox:
     container_name: dify-sandbox
-    image: langgenius/dify-sandbox:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-sandbox:latest
     restart: unless-stopped
     environment:
       # The DifySandbox configurations
       # Make sure you are changing this key for your deployment with a strong key.
-      # You can generate a strong key using `openssl rand -base64 42`.
+      # You can generate a strong key using openssl rand -base64 42.
       API_KEY: dify-sandbox
       GIN_MODE: release
       WORKER_TIMEOUT: '15'
@@ -377,7 +385,7 @@ services:
   # plugin daemon
   plugin_daemon:
     container_name: dify-plugin_daemon
-    image: langgenius/dify-plugin-daemon:latest-local
+    image: 192.168.19.104:8081/tensoros_appstore/dify-plugin-daemon:latest-local
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -406,7 +414,7 @@ services:
   # https://docs.dify.ai/learn-more/faq/install-faq#id-18.-why-is-ssrf_proxy-needed
   ssrf_proxy:
     container_name: dify-ssrf_proxy
-    image: ubuntu/squid:latest
+    image: 192.168.19.104:8081/tensoros_appstore/squid:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify/ssrf_proxy:/init # Avoid creating files as dirs
@@ -430,7 +438,7 @@ services:
   # used for reverse proxying the API service and Web service.
   nginx:
     container_name: dify-nginx
-    image: nginx:latest
+    image: 192.168.19.104:8081/tensoros_appstore/nginx:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify/nginx:/init # Avoid creating files as dirs
@@ -446,7 +454,7 @@ services:
       NGINX_HTTPS_ENABLED: 'false'
       NGINX_SSL_PORT: '443'
       NGINX_PORT: '80'
-      # You're required to add your own SSL certificates/keys to the `/DATA/AppData/dify/nginx/ssl` directory
+      # You're required to add your own SSL certificates/keys to the /DATA/AppData/dify/nginx/ssl directory
       # and modify the env vars below in .env if HTTPS_ENABLED is true.
       NGINX_SSL_CERT_FILENAME: dify.crt
       NGINX_SSL_CERT_KEY_FILENAME: dify.key
@@ -459,9 +467,13 @@ services:
       NGINX_ENABLE_CERTBOT_CHALLENGE: 'false'
       CERTBOT_DOMAIN: your_domain.com
     depends_on:
-      - api
-      - web
-      - init
+      web:
+        condition: service_healthy
+      api:
+        condition: service_started
+      init:
+    condition: service_started
+
     ports:
       - '6080:80'
       # - '${EXPOSE_NGINX_SSL_PORT:-443}:${NGINX_SSL_PORT:-443}'
@@ -471,7 +483,7 @@ services:
   # The Weaviate vector store.
   weaviate:
     container_name: dify-weaviate
-    image: semitechnologies/weaviate:1.19.0
+    image: 192.168.19.104:8081/tensoros_appstore/weaviate:1.19.0
     profiles:
       - ''
       - weaviate
@@ -502,6 +514,11 @@ networks:
     internal: true
   dify:
     name: dify
+    
+volumes:
+  dify_web_pm2:
+    name: dify
+
 
 x-casaos:
   architectures:
