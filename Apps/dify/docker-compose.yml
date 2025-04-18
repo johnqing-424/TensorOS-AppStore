@@ -224,7 +224,7 @@ services:
   # init service, used for initializing the config files.
   init:
     container_name: dify-init
-    image: 192.168.19.104:8081/tensoros_appstore/dify-init:latest
+    image: 190.168.19.104:8081/tensoros_appstore/dify-init:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify:/configs
@@ -234,7 +234,7 @@ services:
   # API service
   api:
     container_name: dify-api
-    image: 192.168.19.104:8081/tensoros_appstore/dify-api:latest
+    image: 190.168.19.104:8081/tensoros_appstore/dify-api:latest
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -262,7 +262,7 @@ services:
   # The Celery worker for processing the queue.
   worker:
     container_name: dify-worker
-    image: 192.168.19.104:8081/tensoros_appstore/dify-api:latest
+    image: 190.168.19.104:8081/tensoros_appstore/dify-api:latest
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -287,7 +287,7 @@ services:
   # Frontend web application.
   web:
     container_name: dify-web
-    image: 192.168.19.104:8081/tensoros_appstore/dify-web:latest
+    image: 190.168.19.104:8081/tensoros_appstore/dify-web:latest
     restart: unless-stopped
     environment:
       CONSOLE_API_URL: ''
@@ -307,7 +307,7 @@ services:
   # The postgres database.
   db:
     container_name: dify-db
-    image: 192.168.19.104:8081/tensoros_appstore/postgres:15-alpine
+    image: 190.168.19.104:8081/tensoros_appstore/postgres:15-alpine
     restart: unless-stopped
     environment:
       PGUSER: postgres
@@ -333,7 +333,7 @@ services:
   # The redis cache.
   redis:
     container_name: dify-redis
-    image: 192.168.19.104:8081/tensoros_appstore/redis:6-alpine
+    image: 190.168.19.104:8081/tensoros_appstore/redis:6-alpine
     restart: unless-stopped
     environment:
       REDISCLI_AUTH: difyai123456
@@ -350,12 +350,12 @@ services:
   # The DifySandbox
   sandbox:
     container_name: dify-sandbox
-    image: 192.168.19.104:8081/tensoros_appstore/dify-sandbox:latest
+    image: 190.168.19.104:8081/tensoros_appstore/dify-sandbox:latest
     restart: unless-stopped
     environment:
       # The DifySandbox configurations
       # Make sure you are changing this key for your deployment with a strong key.
-      # You can generate a strong key using openssl rand -base64 42.
+      # You can generate a strong key using `openssl rand -base64 42`.
       API_KEY: dify-sandbox
       GIN_MODE: release
       WORKER_TIMEOUT: '15'
@@ -377,7 +377,7 @@ services:
   # plugin daemon
   plugin_daemon:
     container_name: dify-plugin_daemon
-    image: 192.168.19.104:8081/tensoros_appstore/dify-plugin-daemon:latest-local
+    image: 190.168.19.104:8081/tensoros_appstore/dify-plugin-daemon:latest-local
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -406,7 +406,7 @@ services:
   # https://docs.dify.ai/learn-more/faq/install-faq#id-18.-why-is-ssrf_proxy-needed
   ssrf_proxy:
     container_name: dify-ssrf_proxy
-    image: 192.168.19.104:8081/tensoros_appstore/squid:latest
+    image: 190.168.19.104:8081/tensoros_appstore/squid:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify/ssrf_proxy:/init # Avoid creating files as dirs
@@ -430,7 +430,7 @@ services:
   # used for reverse proxying the API service and Web service.
   nginx:
     container_name: dify-nginx
-    image: 192.168.19.104:8081/tensoros_appstore/nginx:latest
+    image: 190.168.19.104:8081/tensoros_appstore/nginx:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify/nginx:/init # Avoid creating files as dirs
@@ -446,7 +446,7 @@ services:
       NGINX_HTTPS_ENABLED: 'false'
       NGINX_SSL_PORT: '443'
       NGINX_PORT: '80'
-      # You're required to add your own SSL certificates/keys to the /DATA/AppData/dify/nginx/ssl directory
+      # You're required to add your own SSL certificates/keys to the `/DATA/AppData/dify/nginx/ssl` directory
       # and modify the env vars below in .env if HTTPS_ENABLED is true.
       NGINX_SSL_CERT_FILENAME: dify.crt
       NGINX_SSL_CERT_KEY_FILENAME: dify.key
@@ -459,13 +459,9 @@ services:
       NGINX_ENABLE_CERTBOT_CHALLENGE: 'false'
       CERTBOT_DOMAIN: your_domain.com
     depends_on:
-      web:
-        condition: service_healthy
-      api:
-        condition: service_started
-      init:
-    condition: service_started
-
+      - api
+      - web
+      - init
     ports:
       - '6080:80'
       # - '${EXPOSE_NGINX_SSL_PORT:-443}:${NGINX_SSL_PORT:-443}'
@@ -475,7 +471,7 @@ services:
   # The Weaviate vector store.
   weaviate:
     container_name: dify-weaviate
-    image: 192.168.19.104:8081/tensoros_appstore/weaviate:1.19.0
+    image: 190.168.19.104:8081/tensoros_appstore/weaviate:latest
     profiles:
       - ''
       - weaviate
@@ -510,14 +506,15 @@ networks:
 x-casaos:
   architectures:
     - arm64
+    - amd64
   main: api
   store_app_id: dify
-  author: Tensor
+  author: Johnqing
   category: Developer
   description:
     en_us: Dify is an open-source LLM app development platform. Orchestrate LLM apps from agents to complex AI workflows, with a built-in RAG engine. More production-ready than LangChain.  Build AI applications faster with support for mainstream LLMs, an intuitive prompt orchestration interface, high-quality RAG engines, and a flexible AI agent framework.
     zh_cn: Dify 是一个开源的 LLM 应用开发平台。通过内置的 RAG 引擎，可以编排从代理到复杂 AI 工作流的 LLM 应用。比 LangChain 更易于生产环境部署。支持主流 LLM，提供直观的 prompt 编排界面、高质量的 RAG 引擎和灵活的 AI 代理框架，助您更快地构建 AI 应用。
-  developer: johnqing
+  developer: LangGenius
   icon: https://cdn.jsdelivr.net/gh/Cp0204/CasaOS-AppStore-Play@main/Apps/dify/icon.png
   screenshot_link:
     - https://cdn.jsdelivr.net/gh/Cp0204/CasaOS-AppStore-Play@main/Apps/dify/screenshot-1.png
