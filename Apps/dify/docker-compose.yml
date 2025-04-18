@@ -224,7 +224,7 @@ services:
   # init service, used for initializing the config files.
   init:
     container_name: dify-init
-    image: 190.168.19.104:8081/tensoros_appstore/dify-init:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-init:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify:/configs
@@ -234,7 +234,8 @@ services:
   # API service
   api:
     container_name: dify-api
-    image: 190.168.19.104:8081/tensoros_appstore/dify-api:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-api:latest
+    privileged: true
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -262,7 +263,7 @@ services:
   # The Celery worker for processing the queue.
   worker:
     container_name: dify-worker
-    image: 190.168.19.104:8081/tensoros_appstore/dify-api:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-api:latest
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -287,7 +288,7 @@ services:
   # Frontend web application.
   web:
     container_name: dify-web
-    image: 190.168.19.104:8081/tensoros_appstore/dify-web:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-web-fixed:latest
     restart: unless-stopped
     environment:
       CONSOLE_API_URL: ''
@@ -301,13 +302,22 @@ services:
       TOP_K_MAX_VALUE: '10'
       INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH: '4000'
       PM2_INSTANCES: '2'
+      PM2_HOME: /app/.pm2
+    volumes:
+      - type: bind
+        source: /DATA/AppData/dify/.pm2
+        target: /app/.pm2
+    depends_on:
+      - api
+      - redis
+      - db
     networks:
       - dify
-
+    
   # The postgres database.
   db:
     container_name: dify-db
-    image: 190.168.19.104:8081/tensoros_appstore/postgres:15-alpine
+    image: 192.168.19.104:8081/tensoros_appstore/postgres:15-alpine
     restart: unless-stopped
     environment:
       PGUSER: postgres
@@ -333,7 +343,7 @@ services:
   # The redis cache.
   redis:
     container_name: dify-redis
-    image: 190.168.19.104:8081/tensoros_appstore/redis:6-alpine
+    image: 192.168.19.104:8081/tensoros_appstore/redis:6-alpine
     restart: unless-stopped
     environment:
       REDISCLI_AUTH: difyai123456
@@ -350,7 +360,7 @@ services:
   # The DifySandbox
   sandbox:
     container_name: dify-sandbox
-    image: 190.168.19.104:8081/tensoros_appstore/dify-sandbox:latest
+    image: 192.168.19.104:8081/tensoros_appstore/dify-sandbox:latest
     restart: unless-stopped
     environment:
       # The DifySandbox configurations
@@ -377,7 +387,7 @@ services:
   # plugin daemon
   plugin_daemon:
     container_name: dify-plugin_daemon
-    image: 190.168.19.104:8081/tensoros_appstore/dify-plugin-daemon:latest-local
+    image: 192.168.19.104:8081/tensoros_appstore/dify-plugin-daemon:latest-local
     restart: unless-stopped
     environment:
       # Use the shared environment variables.
@@ -406,7 +416,7 @@ services:
   # https://docs.dify.ai/learn-more/faq/install-faq#id-18.-why-is-ssrf_proxy-needed
   ssrf_proxy:
     container_name: dify-ssrf_proxy
-    image: 190.168.19.104:8081/tensoros_appstore/squid:latest
+    image: 192.168.19.104:8081/tensoros_appstore/squid:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify/ssrf_proxy:/init # Avoid creating files as dirs
@@ -430,7 +440,7 @@ services:
   # used for reverse proxying the API service and Web service.
   nginx:
     container_name: dify-nginx
-    image: 190.168.19.104:8081/tensoros_appstore/nginx:latest
+    image: 192.168.19.104:8081/tensoros_appstore/nginx:latest
     restart: unless-stopped
     volumes:
       - /DATA/AppData/dify/nginx:/init # Avoid creating files as dirs
@@ -471,7 +481,7 @@ services:
   # The Weaviate vector store.
   weaviate:
     container_name: dify-weaviate
-    image: 190.168.19.104:8081/tensoros_appstore/weaviate:latest
+    image: 192.168.19.104:8081/tensoros_appstore/weaviate:latest
     profiles:
       - ''
       - weaviate
