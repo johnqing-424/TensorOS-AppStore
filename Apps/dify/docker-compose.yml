@@ -459,9 +459,13 @@ services:
       NGINX_ENABLE_CERTBOT_CHALLENGE: 'false'
       CERTBOT_DOMAIN: your_domain.com
     depends_on:
-      - api
-      - web
-      - init
+      web:
+        condition: service_healthy
+      api:
+        condition: service_started
+      init:
+    condition: service_started
+
     ports:
       - '6080:80'
       # - '${EXPOSE_NGINX_SSL_PORT:-443}:${NGINX_SSL_PORT:-443}'
