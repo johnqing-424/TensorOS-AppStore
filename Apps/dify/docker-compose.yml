@@ -510,7 +510,6 @@ networks:
 x-casaos:
   architectures:
     - arm64
-    - amd64
   main: api
   store_app_id: dify
   author: Tensor
